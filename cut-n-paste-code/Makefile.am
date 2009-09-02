@@ -1,2 +1,5 @@
-SUBDIRS = libegg
+SUBDIRS = libegg	\
+	toolbar-editor	\
+	$(NULL)
+
 
