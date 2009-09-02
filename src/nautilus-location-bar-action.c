@@ -130,8 +130,6 @@ disconnect_proxy (GtkAction *action, GtkWidget *proxy)
 static void
 nautilus_location_bar_action_finalize (GObject *object)
 {
-	NautilusLocationBarAction *action = NAUTILUS_LOCATION_BAR_ACTION (object);
-
 	(* G_OBJECT_CLASS (parent_class)->finalize) (object);
 }
 

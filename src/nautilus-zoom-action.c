@@ -126,8 +126,6 @@ disconnect_proxy (GtkAction *action, GtkWidget *proxy)
 static void
 nautilus_zoom_action_finalize (GObject *object)
 {
-	NautilusZoomAction *action = NAUTILUS_ZOOM_ACTION (object);
-
 	(* G_OBJECT_CLASS (parent_class)->finalize) (object);
 }
 

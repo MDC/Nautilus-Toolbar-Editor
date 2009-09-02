@@ -125,8 +125,6 @@ disconnect_proxy (GtkAction *action, GtkWidget *proxy)
 static void
 nautilus_view_chooser_action_finalize (GObject *object)
 {
-	NautilusViewChooserAction *action = NAUTILUS_VIEW_CHOOSER_ACTION (object);
-
 	(* G_OBJECT_CLASS (parent_class)->finalize) (object);
 }
 
