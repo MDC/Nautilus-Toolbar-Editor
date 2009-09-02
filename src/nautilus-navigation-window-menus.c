@@ -292,7 +292,7 @@ ev_window_cmd_edit_toolbar_callback (GtkDialog *dialog,
 			egg_toolbars_model_add_toolbar (window->details->toolbars_model, -1, "UserCreated");
 			break;
 		case GTK_RESPONSE_REJECT:
-			nautilus_toolbars_model_load_default (window->details->toolbars_model);
+			nautilus_toolbars_model_load_default (NAUTILUS_TOOLBARS_MODEL (window->details->toolbars_model));
 			break;
 		default:
 		        egg_editable_toolbar_set_edit_mode
@@ -332,9 +332,9 @@ combo_changed_cb (GtkComboBox *combo,
 	value = g_flags_get_first_value (flags_class, flags);
 	if (value != NULL) {
 		pref = value->value_nick;
-		nautilus_toolbars_model_set_style (window->details->toolbars_model, pref); 
+		nautilus_toolbars_model_set_style (NAUTILUS_TOOLBARS_MODEL (window->details->toolbars_model), pref); 
 	} else {
-		nautilus_toolbars_model_set_style (window->details->toolbars_model, "default"); 
+		nautilus_toolbars_model_set_style (NAUTILUS_TOOLBARS_MODEL (window->details->toolbars_model), "default"); 
 	}
 
 	g_type_class_unref (flags_class);
