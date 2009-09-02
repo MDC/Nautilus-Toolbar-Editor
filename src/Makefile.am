@@ -93,8 +93,6 @@ nautilus_SOURCES = \
         nautilus-location-bar-action.h          \
 	nautilus-navigation-action.c		\
 	nautilus-navigation-action.h		\
-	nautilus-navigation-action.c		\
-	nautilus-navigation-action.h		\
 	nautilus-navigation-bar.c         	\
 	nautilus-navigation-bar.h		\
 	nautilus-navigation-window-menus.c      \
