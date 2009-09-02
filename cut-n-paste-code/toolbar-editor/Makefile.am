@@ -23,10 +23,11 @@ libtoolbareditor_la_CPPFLAGS = \
 	$(AM_CPPFLAGS)
 
 libtoolbareditor_la_CFLAGS = \
-	$(SHELL_CORE_CFLAGS)			\
+	$(CORE_CFLAGS)			\
 	$(WARN_CFLAGS)				\
 	$(DISABLE_DEPRECATED)			\
 	-DCURSOR_DIR=\"$(pkgdatadir)\"		\
+	$(TOOLBAR_EDITOR_CFLAGS)		\
 	$(AM_CFLAGS)
 
 BUILT_SOURCES = \
@@ -56,7 +57,7 @@ stamp-eggmarshalers.c: eggmarshalers.list
 eggtypebuiltins.c: stamp-eggtypebuiltins.c
 	@true
 stamp-eggtypebuiltins.c: $(EGGHEADERS)
-	( cd $(srcdir) && $(GLIB_MKENUMS) \
+	( cd $(srcdir) && glib-mkenums \
 		--fhead "#include <config.h>\n\n" \
 		--fhead "#include \"eggtypebuiltins.h\"\n\n" \
 		--fprod "\n/* enumerations from \"@filename@\" */" \
@@ -77,7 +78,7 @@ stamp-eggtypebuiltins.c: $(EGGHEADERS)
 eggtypebuiltins.h: stamp-eggtypebuiltins.h
 	@true
 stamp-eggtypebuiltins.h: $(EGGHEADERS)
-	( cd $(srcdir) && $(GLIB_MKENUMS) \
+	( cd $(srcdir) && glib-mkenums \
 		--fhead "#ifndef __EGGTYPEBUILTINS_H__\n" \
 		--fhead "#define __EGGTYPEBUILTINS_H__ 1\n\n" \
 		--fhead "#include <glib-object.h>\n\n" \
