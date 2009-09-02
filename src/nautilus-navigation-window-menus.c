@@ -40,6 +40,7 @@
 #include "nautilus-window-manage-views.h"
 #include "nautilus-window-private.h"
 #include "nautilus-window-bookmarks.h"
+#include "nautilus-toolbars-model.h"
 #include <cut-n-paste-code/toolbar-editor/egg-toolbar-editor.h>
 #include <cut-n-paste-code/toolbar-editor/eggtypebuiltins.h>
 #include <eel/eel-glib-extensions.h>

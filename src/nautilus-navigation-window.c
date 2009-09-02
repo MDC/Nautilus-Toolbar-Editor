@@ -1715,6 +1715,8 @@ nautilus_navigation_window_set_bar_mode (NautilusNavigationWindow *window,
 	gboolean use_entry;
 	gboolean show;
 
+	show = FALSE;
+
 	switch (mode) {
 
 	case NAUTILUS_BAR_PATH:
