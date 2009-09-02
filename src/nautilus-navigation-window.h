@@ -102,8 +102,10 @@ gboolean nautilus_navigation_window_path_bar_showing 	 (NautilusNavigationWindow
 gboolean nautilus_navigation_window_search_bar_showing 	 (NautilusNavigationWindow *window);
 
 gboolean nautilus_navigation_window_location_bar_showing (NautilusNavigationWindow *window);
-void     nautilus_navigation_window_hide_toolbar         (NautilusNavigationWindow *window);
-void     nautilus_navigation_window_show_toolbar         (NautilusNavigationWindow *window);
+void     nautilus_navigation_window_hide_toolbar         (NautilusNavigationWindow *window,
+                                                          gboolean                  save_preference);
+void     nautilus_navigation_window_show_toolbar         (NautilusNavigationWindow *window,
+                                                          gboolean                  save_preference);
 gboolean nautilus_navigation_window_toolbar_showing      (NautilusNavigationWindow *window);
 void     nautilus_navigation_window_hide_sidebar         (NautilusNavigationWindow *window);
 void     nautilus_navigation_window_show_sidebar         (NautilusNavigationWindow *window);

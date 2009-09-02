@@ -30,9 +30,9 @@
 
 #include <config.h>
 #include "nautilus-window-private.h"
-
 #include "nautilus-actions.h"
 #include "nautilus-application.h"
+#include "nautilus-location-bar-action.h"
 #include "nautilus-bookmarks-window.h"
 #include "nautilus-main.h"
 #include "nautilus-location-bar.h"
@@ -128,7 +128,7 @@ static void search_bar_cancel_callback               (GtkWidget                *
 
 static void nautilus_navigation_window_show_location_bar_temporarily (NautilusNavigationWindow *window);
 
-static void view_as_menu_switch_views_callback	     (GtkComboBox              *combo_box,
+static void view_as_menu_switch_views_callback	     (GtkComboBox             *combo_box,
 						      NautilusWindow           *window);
 
 G_DEFINE_TYPE (NautilusNavigationWindow, nautilus_navigation_window, NAUTILUS_TYPE_WINDOW)
@@ -346,11 +346,7 @@ notebook_button_press_cb (GtkWidget *widget,
 static void
 nautilus_navigation_window_init (NautilusNavigationWindow *window)
 {
-	GtkUIManager *ui_manager;
-	GtkWidget *toolbar;
-	GtkWidget *location_bar;
 	GtkWidget *view_as_menu_vbox;
-	GtkToolItem *item;
 	GtkWidget *hbox;
 
 	window->details = G_TYPE_INSTANCE_GET_PRIVATE (window, NAUTILUS_TYPE_NAVIGATION_WINDOW, NautilusNavigationWindowDetails);
@@ -389,19 +385,6 @@ nautilus_navigation_window_init (NautilusNavigationWindow *window)
 	
 	nautilus_navigation_window_initialize_actions (window);
 	nautilus_navigation_window_initialize_menus (window);
-	
-	ui_manager = nautilus_window_get_ui_manager (NAUTILUS_WINDOW (window));
-	toolbar = gtk_ui_manager_get_widget (ui_manager, "/Toolbar");
-	window->details->toolbar = toolbar;
-	gtk_table_attach (GTK_TABLE (NAUTILUS_WINDOW (window)->details->table),
-			  toolbar,
-			  /* X direction */                   /* Y direction */
-			  0, 1,                               1, 2,
-			  GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0,
-			  0,                                  0);
-	gtk_widget_show (toolbar);
-
-	nautilus_navigation_window_initialize_toolbars (window);
 
 	/* Set initial sensitivity of some buttons & menu items 
 	 * now that they're all created.
@@ -410,19 +393,12 @@ nautilus_navigation_window_init (NautilusNavigationWindow *window)
 	nautilus_navigation_window_allow_forward (window, FALSE);
 
 	/* set up location bar */
-	location_bar = gtk_toolbar_new ();
-	window->details->location_bar = location_bar;
-
 	hbox = gtk_hbox_new (FALSE, 12);
 	gtk_widget_show (hbox);
-
-	item = gtk_tool_item_new ();
-	gtk_container_set_border_width (GTK_CONTAINER (item), 4);
-	gtk_widget_show (GTK_WIDGET (item));
-	gtk_tool_item_set_expand (item, TRUE);
-	gtk_container_add (GTK_CONTAINER (item),  hbox);
-	gtk_toolbar_insert (GTK_TOOLBAR (location_bar),
-			    item, -1);
+	window->details->location_bar_widget = hbox;
+	g_object_ref (window->details->location_bar_widget);
+	
+	window->details->location_bar = -1; /* No temp location bar */
 
 	window->details->location_button = location_button_create (window);
 	gtk_box_pack_start (GTK_BOX (hbox), window->details->location_button, FALSE, FALSE, 0);
@@ -465,14 +441,8 @@ nautilus_navigation_window_init (NautilusNavigationWindow *window)
 	view_as_menu_vbox = gtk_vbox_new (FALSE, 4);
 	gtk_widget_show (view_as_menu_vbox);
 
-	item = gtk_tool_item_new ();
-	gtk_container_set_border_width (GTK_CONTAINER (item), 4);
-	gtk_widget_show (GTK_WIDGET (item));
-	gtk_container_add (GTK_CONTAINER (item), view_as_menu_vbox);
-	gtk_toolbar_insert (GTK_TOOLBAR (location_bar),
-			    item, -1);
-	
 	window->view_as_combo_box = gtk_combo_box_new_text ();
+	g_object_ref (window->view_as_combo_box);
 	gtk_combo_box_set_focus_on_click (GTK_COMBO_BOX (window->view_as_combo_box), FALSE);
 	gtk_box_pack_end (GTK_BOX (view_as_menu_vbox), window->view_as_combo_box, TRUE, FALSE, 0);
 	gtk_widget_show (window->view_as_combo_box);
@@ -483,6 +453,7 @@ nautilus_navigation_window_init (NautilusNavigationWindow *window)
 	 * It gets shown later, if the view-frame contains something zoomable.
 	 */
 	window->zoom_control = nautilus_zoom_control_new ();
+	g_object_ref (window->zoom_control);
 	g_signal_connect_object (window->zoom_control, "zoom_in",
 				 G_CALLBACK (nautilus_window_zoom_in),
 				 window, G_CONNECT_SWAPPED);
@@ -495,22 +466,16 @@ nautilus_navigation_window_init (NautilusNavigationWindow *window)
 	g_signal_connect_object (window->zoom_control, "zoom_to_default",
 				 G_CALLBACK (nautilus_window_zoom_to_default),
 				 window, G_CONNECT_SWAPPED);
-	
-	item = gtk_tool_item_new ();
-	gtk_container_set_border_width (GTK_CONTAINER (item), 4);
-	gtk_widget_show (GTK_WIDGET (item));
-	gtk_container_add (GTK_CONTAINER (item),  window->zoom_control);
-	gtk_toolbar_insert (GTK_TOOLBAR (location_bar),
-			    item, 1);
 
-	gtk_widget_show (location_bar);
+	nautilus_navigation_window_initialize_toolbars (window);
 
+	/* add the toolbar to the main interface */
 	gtk_table_attach (GTK_TABLE (NAUTILUS_WINDOW (window)->details->table),
-			  location_bar,
-			  /* X direction */                    /* Y direction */
-			  0, 1,                                2, 3,
-			  GTK_EXPAND | GTK_FILL | GTK_SHRINK,  0,
-			  0,                                   0);
+			  window->details->toolbar,
+			  /* X direction */                   /* Y direction */
+			  0, 1,                               1, 2,
+			  GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0,
+			  0,                                  0);
 
 	eel_preferences_add_callback_while_alive (NAUTILUS_PREFERENCES_ALWAYS_USE_LOCATION_ENTRY,
 						  always_use_location_entry_changed,
@@ -1023,10 +988,18 @@ nautilus_navigation_window_destroy (GtkObject *object)
 	g_list_free (window->sidebar_panels);
 	window->sidebar_panels = NULL;
 
+	if (window->view_as_combo_box)
+		g_object_unref (window->view_as_combo_box);
+	if (window->zoom_control)
+		g_object_unref (window->zoom_control);
+	if (window->details->location_bar_widget)
+		g_object_unref (window->details->location_bar_widget);
+
 	window->view_as_combo_box = NULL;
 	window->navigation_bar = NULL;
 	window->path_bar = NULL;
 	window->zoom_control = NULL;
+	window->details->location_bar_widget = NULL;
 
 	window->details->content_paned = NULL;
 
@@ -1181,6 +1154,7 @@ static void
 view_as_menu_switch_views_callback (GtkComboBox *combo_box, NautilusWindow *window)
 {         
 	int active;
+	
 	g_assert (GTK_IS_COMBO_BOX (combo_box));
 	g_assert (NAUTILUS_IS_WINDOW (window));
 
@@ -1237,12 +1211,11 @@ load_view_as_menu (NautilusWindow *window)
 
 		id = nautilus_window_slot_get_content_view_id (slot);
 		info = nautilus_view_factory_lookup (id);
-		gtk_combo_box_append_text (GTK_COMBO_BOX (NAUTILUS_NAVIGATION_WINDOW (window)->view_as_combo_box),
-					   _(info->view_combo_label));
+		gtk_combo_box_append_text (combo_box, _(info->view_combo_label));
 		selected_index = index;
 	}
 
-	gtk_combo_box_set_active (GTK_COMBO_BOX (NAUTILUS_NAVIGATION_WINDOW (window)->view_as_combo_box), selected_index);
+	gtk_combo_box_set_active (combo_box, selected_index);
 }
 
 static void
@@ -1597,7 +1570,10 @@ real_sync_zoom_widgets (NautilusWindow *nautilus_window)
 								      nautilus_view_get_zoom_level (view));
 			}
 		} else {
-			gtk_widget_hide (window->zoom_control);
+			/* Things will be very strange if we hide the zoom 
+ 			 * control as we now have an editable toolbar so
+			 * setting sensitive to FALSE should be enough */
+			gtk_widget_set_sensitive (window->zoom_control, FALSE);
 		}
 	}
 }
@@ -1668,7 +1644,7 @@ void
 nautilus_navigation_window_hide_location_bar (NautilusNavigationWindow *window, gboolean save_preference)
 {
 	window->details->temporary_location_bar = FALSE;
-	gtk_widget_hide (window->details->location_bar);
+	gtk_widget_hide (window->details->toolbar);
 	nautilus_navigation_window_update_show_hide_menu_items (window);
 	if (save_preference &&
 	    eel_preferences_key_is_writable (NAUTILUS_PREFERENCES_START_WITH_LOCATION_BAR)) {
@@ -1679,7 +1655,7 @@ nautilus_navigation_window_hide_location_bar (NautilusNavigationWindow *window, 
 void 
 nautilus_navigation_window_show_location_bar (NautilusNavigationWindow *window, gboolean save_preference)
 {
-	gtk_widget_show (window->details->location_bar);
+	gtk_widget_show (window->details->toolbar);
 	nautilus_navigation_window_update_show_hide_menu_items (window);
 	if (save_preference &&
 	    eel_preferences_key_is_writable (NAUTILUS_PREFERENCES_START_WITH_LOCATION_BAR)) {
@@ -1687,11 +1663,36 @@ nautilus_navigation_window_show_location_bar (NautilusNavigationWindow *window, 
 	}
 }
 
+static gboolean
+toolbar_item_is_visible (NautilusNavigationWindow *window, const char *item_name)
+{
+	EggToolbarsModel *model;
+	int n_toolbars;
+	int n_items;
+	int t, i;
+
+	model = window->details->toolbars_model;
+	n_toolbars = egg_toolbars_model_n_toolbars (model);
+
+	for (t = 0; t < n_toolbars; t++) {
+		n_items = egg_toolbars_model_n_items (model, t);
+
+		const char * name;
+		for (i = 0; i < n_items; i++) {
+			name = egg_toolbars_model_item_nth (model, t, i);
+			if (strcmp (item_name, name) == 0)
+				return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+
 gboolean
 nautilus_navigation_window_location_bar_showing (NautilusNavigationWindow *window)
 {
-	if (window->details->location_bar != NULL) {
-		return GTK_WIDGET_VISIBLE (window->details->location_bar);
+	if (window->details->toolbar != NULL) {
+		return GTK_WIDGET_VISIBLE (window->details->toolbar);
 	}
 	/* If we're not visible yet we haven't changed visibility, so its TRUE */
 	return TRUE;
@@ -1712,6 +1713,7 @@ nautilus_navigation_window_set_bar_mode (NautilusNavigationWindow *window,
 					 NautilusBarMode mode)
 {
 	gboolean use_entry;
+	gboolean show;
 
 	switch (mode) {
 
@@ -1719,19 +1721,54 @@ nautilus_navigation_window_set_bar_mode (NautilusNavigationWindow *window,
 		gtk_widget_show (window->path_bar);
 		gtk_widget_hide (window->navigation_bar);
 		gtk_widget_hide (window->search_bar);
+		show = FALSE;
 		break;
 
 	case NAUTILUS_BAR_NAVIGATION:
 		gtk_widget_show (window->navigation_bar);
 		gtk_widget_hide (window->path_bar);
 		gtk_widget_hide (window->search_bar);
+		show = TRUE;
 		break;
 
 	case NAUTILUS_BAR_SEARCH:
 		gtk_widget_show (window->search_bar);
 		gtk_widget_hide (window->path_bar);
 		gtk_widget_hide (window->navigation_bar);
+		show = TRUE;
 		break;
+	}
+
+	if (show) {
+		gboolean location_visible;
+		location_visible = toolbar_item_is_visible (window, "Location");
+
+		if (!location_visible) {
+			EggTbModelFlags flags;
+
+			/* Create a temporary toolbar to show the location bar */
+			window->details->location_bar = egg_toolbars_model_add_toolbar (
+							window->details->toolbars_model,
+							egg_toolbars_model_n_toolbars (window->details->toolbars_model),
+							"temp_location_bar");
+
+			flags = egg_toolbars_model_get_flags (window->details->toolbars_model, 
+							      window->details->location_bar);
+			flags |= EGG_TB_MODEL_NO_SAVE;
+
+			egg_toolbars_model_set_flags (window->details->toolbars_model,
+						      window->details->location_bar,
+						      flags);
+			egg_toolbars_model_add_item (window->details->toolbars_model,
+						     window->details->location_bar,
+					             0,
+						     "Location");
+		}
+	} else {
+		if (window->details->location_bar != -1) {
+			egg_toolbars_model_remove_toolbar (window->details->toolbars_model, window->details->location_bar);
+			window->details->location_bar = -1; //XXXMARCUS FIXME: -1
+		}
 	}
 
 	if (mode == NAUTILUS_BAR_NAVIGATION || mode == NAUTILUS_BAR_PATH) {
@@ -1804,22 +1841,26 @@ nautilus_navigation_window_status_bar_showing (NautilusNavigationWindow *window)
 
 
 void 
-nautilus_navigation_window_hide_toolbar (NautilusNavigationWindow *window)
+nautilus_navigation_window_hide_toolbar (NautilusNavigationWindow *window,
+					 gboolean save_preference)
 {
 	gtk_widget_hide (window->details->toolbar);
 	nautilus_navigation_window_update_show_hide_menu_items (window);
-	if (eel_preferences_key_is_writable (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR) &&
+	if (save_preference &&
+	    eel_preferences_key_is_writable (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR) &&
 	    eel_preferences_get_boolean (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR)) {
 		eel_preferences_set_boolean (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR, FALSE);
 	}
 }
 
 void 
-nautilus_navigation_window_show_toolbar (NautilusNavigationWindow *window)
+nautilus_navigation_window_show_toolbar (NautilusNavigationWindow *window,
+					 gboolean save_preference)
 {
 	gtk_widget_show (window->details->toolbar);
 	nautilus_navigation_window_update_show_hide_menu_items (window);
-	if (eel_preferences_key_is_writable (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR) &&
+	if (save_preference &&
+	    eel_preferences_key_is_writable (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR) &&
 	    !eel_preferences_get_boolean (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR)) {
 		eel_preferences_set_boolean (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR, TRUE);
 	}
@@ -1916,15 +1957,9 @@ nautilus_navigation_window_show (GtkWidget *widget)
 	 */
 
 	if (eel_preferences_get_boolean (NAUTILUS_PREFERENCES_START_WITH_TOOLBAR)) {
-		nautilus_navigation_window_show_toolbar (window);
+		nautilus_navigation_window_show_toolbar (window, FALSE);
 	} else {
-		nautilus_navigation_window_hide_toolbar (window);
-	}
-
-	if (eel_preferences_get_boolean (NAUTILUS_PREFERENCES_START_WITH_LOCATION_BAR)) {
-		nautilus_navigation_window_show_location_bar (window, FALSE);
-	} else {
-		nautilus_navigation_window_hide_location_bar (window, FALSE);
+		nautilus_navigation_window_hide_toolbar (window, FALSE);
 	}
 
 	if (eel_preferences_get_boolean (NAUTILUS_PREFERENCES_ALWAYS_USE_LOCATION_ENTRY)) {

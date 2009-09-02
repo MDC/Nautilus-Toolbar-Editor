@@ -40,6 +40,8 @@
 #include "nautilus-window-manage-views.h"
 #include "nautilus-window-private.h"
 #include "nautilus-window-bookmarks.h"
+#include <cut-n-paste-code/toolbar-editor/egg-toolbar-editor.h>
+#include <cut-n-paste-code/toolbar-editor/eggtypebuiltins.h>
 #include <eel/eel-glib-extensions.h>
 #include <eel/eel-gnome-extensions.h>
 #include <eel/eel-stock-dialogs.h>
@@ -69,6 +71,33 @@ action_close_all_windows_callback (GtkAction *action,
 {
 	nautilus_application_close_all_navigation_windows ();
 }
+enum
+{
+	COL_TEXT,
+	COL_FLAGS,
+	COL_IS_SEP
+};
+enum
+{
+	RESPONSE_ADD_TOOLBAR = 1
+};
+static const struct
+{
+	const char *text;
+	EggTbModelFlags flags;
+	gboolean cc_domain;
+}
+toolbar_styles [] =
+{
+	{ /* Translators: The text before the "|" is context to help you decide on
+	   * the correct translation. You MUST OMIT it in the translated string. */
+	  N_("toolbar style|Default"), 0, FALSE },
+	{ NULL /* separator row */, 0, FALSE },
+	{ N_("Text below icons"), EGG_TB_MODEL_BOTH, TRUE },
+	{ N_("Text beside icons"), EGG_TB_MODEL_BOTH_HORIZ, TRUE },
+	{ N_("Icons only"), EGG_TB_MODEL_ICONS, TRUE },
+	{ N_("Text only"), EGG_TB_MODEL_TEXT, TRUE }
+};
 
 static gboolean
 should_open_in_new_tab (void)
@@ -147,9 +176,9 @@ action_show_hide_toolbar_callback (GtkAction *action,
 	window = NAUTILUS_NAVIGATION_WINDOW (user_data);
 
 	if (gtk_toggle_action_get_active (GTK_TOGGLE_ACTION (action))) {
-		nautilus_navigation_window_show_toolbar (window);
+		nautilus_navigation_window_show_toolbar (window, TRUE);
 	} else {
-		nautilus_navigation_window_hide_toolbar (window);
+		nautilus_navigation_window_hide_toolbar (window, TRUE);
 	}
 }
 
@@ -167,21 +196,6 @@ action_show_hide_sidebar_callback (GtkAction *action,
 		nautilus_navigation_window_show_sidebar (window);
 	} else {
 		nautilus_navigation_window_hide_sidebar (window);
-	}
-}
-
-static void
-action_show_hide_location_bar_callback (GtkAction *action, 
-					gpointer user_data)
-{
-	NautilusNavigationWindow *window;
-
-	window = NAUTILUS_NAVIGATION_WINDOW (user_data);
-
-	if (gtk_toggle_action_get_active (GTK_TOGGLE_ACTION (action))) {
-		nautilus_navigation_window_show_location_bar (window, TRUE);
-	} else {
-		nautilus_navigation_window_hide_location_bar (window, TRUE);
 	}
 }
 
@@ -216,11 +230,6 @@ nautilus_navigation_window_update_show_hide_menu_items (NautilusNavigationWindow
 					      NAUTILUS_ACTION_SHOW_HIDE_SIDEBAR);
 	gtk_toggle_action_set_active (GTK_TOGGLE_ACTION (action),
 				      nautilus_navigation_window_sidebar_showing (window));
-	
-	action = gtk_action_group_get_action (window->details->navigation_action_group,
-					      NAUTILUS_ACTION_SHOW_HIDE_LOCATION_BAR);
-	gtk_toggle_action_set_active (GTK_TOGGLE_ACTION (action),
-				      nautilus_navigation_window_location_bar_showing (window));
 
 	action = gtk_action_group_get_action (window->details->navigation_action_group,
 					      NAUTILUS_ACTION_SHOW_HIDE_STATUSBAR);
@@ -271,6 +280,192 @@ action_edit_bookmarks_callback (GtkAction *action,
 {
         nautilus_window_edit_bookmarks (NAUTILUS_WINDOW (user_data));
 }
+
+static void
+ev_window_cmd_edit_toolbar_callback (GtkDialog *dialog,
+				     int response,
+				     NautilusNavigationWindow *window)
+{
+	switch (response) {
+		case RESPONSE_ADD_TOOLBAR:
+			egg_toolbars_model_add_toolbar (window->details->toolbars_model, -1, "UserCreated");
+			break;
+		case GTK_RESPONSE_REJECT:
+			nautilus_toolbars_model_load_default (window->details->toolbars_model);
+			break;
+		default:
+		        egg_editable_toolbar_set_edit_mode
+                	        (EGG_EDITABLE_TOOLBAR (window->details->toolbar), FALSE);
+		        gtk_widget_destroy (GTK_WIDGET (dialog));
+			break;
+	}
+}
+static gboolean
+row_is_separator (GtkTreeModel *model,
+		  GtkTreeIter *iter,
+		  gpointer data)
+{
+	gboolean is_sep;
+	gtk_tree_model_get (model, iter, COL_IS_SEP, &is_sep, -1);
+	return is_sep;
+}
+
+static void
+combo_changed_cb (GtkComboBox *combo,
+		  NautilusNavigationWindow *window)
+{
+	GtkTreeIter iter;
+	EggTbModelFlags flags;
+	GFlagsClass *flags_class;
+	const GFlagsValue *value;
+	const char *pref = "";
+	GtkTreeModel *store;
+
+	store = gtk_combo_box_get_model (combo);	
+
+	if  (!gtk_combo_box_get_active_iter (combo, &iter)) return;
+
+	gtk_tree_model_get (GTK_TREE_MODEL (store), &iter, COL_FLAGS, &flags, -1);
+
+	flags_class = g_type_class_ref (EGG_TYPE_TB_MODEL_FLAGS);
+	value = g_flags_get_first_value (flags_class, flags);
+	if (value != NULL) {
+		pref = value->value_nick;
+		nautilus_toolbars_model_set_style (window->details->toolbars_model, pref); 
+	} else {
+		nautilus_toolbars_model_set_style (window->details->toolbars_model, "default"); 
+	}
+
+	g_type_class_unref (flags_class);
+}
+
+
+static void
+action_edit_toolbar_callback (GtkAction *action, 
+			      NautilusNavigationWindow *window)
+{
+	GtkWidget *dialog;
+	GtkWidget *editor;
+
+	/* Show the toolbar (and save the setting) */
+	if (!nautilus_navigation_window_toolbar_showing (window)) {
+		nautilus_navigation_window_show_toolbar (window, TRUE);
+	}
+
+        dialog = gtk_dialog_new_with_buttons (_("Toolbar Editor"),
+                                              GTK_WINDOW (window),
+                                              GTK_DIALOG_DESTROY_WITH_PARENT,
+                                              NULL);
+        gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_CLOSE);
+        gtk_container_set_border_width (GTK_CONTAINER (GTK_DIALOG (dialog)), 5);
+        gtk_box_set_spacing (GTK_BOX (GTK_DIALOG (dialog)->vbox), 2);
+        gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
+        gtk_window_set_default_size (GTK_WINDOW (dialog), 500, 400);
+	gtk_dialog_add_button (GTK_DIALOG (dialog),
+			       GTK_STOCK_REVERT_TO_SAVED, GTK_RESPONSE_REJECT); //XXXMARCUS FIXME: better response code
+
+	gtk_dialog_add_button (GTK_DIALOG (dialog),
+			       _("_Add a New Toolbar"), RESPONSE_ADD_TOOLBAR);
+
+	gtk_dialog_add_button (GTK_DIALOG (dialog),
+			       GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+
+        editor = egg_toolbar_editor_new (
+		nautilus_window_get_ui_manager (NAUTILUS_WINDOW (window)),
+		window->details->toolbars_model);
+	gtk_widget_show (editor);
+	//--------------------- FIXME: Cleanup; COPIED FROM EPHIPHANY -----------------------------
+
+	GtkWidget *hbox, *label, *combo;
+	GtkListStore *store;
+	GtkTreeIter iter;
+	GtkCellRenderer *renderer;
+	GFlagsClass *flags_class;
+	const GFlagsValue *value;
+	EggTbModelFlags flags = 0;
+	int i;
+	char *pref;
+
+	hbox = gtk_hbox_new (FALSE, 12);
+	gtk_box_set_spacing (GTK_BOX (editor), 18);
+	gtk_box_pack_start (GTK_BOX (editor), hbox, FALSE, FALSE, 0);
+
+	/* translators: translate the same as in gnome-control-center */
+	label = gtk_label_new_with_mnemonic (_("Toolbar _button labels:"));
+	gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, TRUE, 0);
+
+	store = gtk_list_store_new (3, G_TYPE_STRING, EGG_TYPE_TB_MODEL_FLAGS,
+				    G_TYPE_BOOLEAN);
+
+	for (i = 0; i < G_N_ELEMENTS (toolbar_styles); i++) {
+		const char *text = toolbar_styles[i].text;
+		const char *tr_text = NULL;
+
+		if (text != NULL) {
+			tr_text= Q_(text);
+		}
+
+		gtk_list_store_append (store, &iter);
+		gtk_list_store_set (store, &iter,
+				    COL_TEXT, tr_text,
+				    COL_FLAGS, toolbar_styles[i].flags,
+				    COL_IS_SEP, toolbar_styles[i].text == NULL,
+				    -1);
+	}
+
+	combo = gtk_combo_box_new_with_model (GTK_TREE_MODEL (store));
+	g_object_unref (store);
+
+	renderer = gtk_cell_renderer_text_new ();
+	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
+	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,
+					"text", COL_TEXT, NULL);
+	gtk_combo_box_set_row_separator_func (GTK_COMBO_BOX (combo),
+					      (GtkTreeViewRowSeparatorFunc) row_is_separator,
+					      NULL, NULL);
+
+	gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, FALSE, 0);
+	gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
+	gtk_widget_show_all (hbox);
+
+	/* get active from pref */
+	pref = eel_gconf_get_string (CONF_INTERFACE_TOOLBAR_STYLE);
+	if (pref != NULL) {
+		flags_class = g_type_class_ref (EGG_TYPE_TB_MODEL_FLAGS);
+		value = g_flags_get_value_by_nick (flags_class, pref);
+		if (value != NULL) {
+			flags = value->value;
+		}
+		g_type_class_unref (flags_class);
+	}
+	g_free (pref);
+
+	/* this will set i to 0 if the style is unknown or default */
+	for (i = G_N_ELEMENTS (toolbar_styles) - 1; i > 0; i--)	{
+		if (flags & toolbar_styles[i].flags) break;
+	}
+
+	gtk_combo_box_set_active (GTK_COMBO_BOX (combo), i);
+	g_signal_connect (combo, "changed",
+			G_CALLBACK (combo_changed_cb), window);
+
+
+	//--------------------------------------------------------------------------
+	/* FIXME error handling */
+        gtk_container_add (GTK_CONTAINER (GTK_DIALOG (dialog)->vbox), editor);
+
+        egg_editable_toolbar_set_edit_mode
+                (EGG_EDITABLE_TOOLBAR (window->details->toolbar), TRUE);
+
+        g_signal_connect (dialog, "response",
+                          G_CALLBACK (ev_window_cmd_edit_toolbar_callback),
+			  window);
+
+	gtk_window_set_icon_name (GTK_WINDOW (dialog), "system-file-manager");
+
+        gtk_widget_show_all (dialog);
+}
+
 
 void
 nautilus_navigation_window_remove_go_menu_callback (NautilusNavigationWindow *window)
@@ -814,6 +1009,9 @@ static const GtkActionEntry navigation_entries[] = {
   /* name, stock id, label */  { "Edit Bookmarks", NULL, N_("_Edit Bookmarks..."),
                                  "<control>b", N_("Display a window that allows editing the bookmarks in this menu"),
                                  G_CALLBACK (action_edit_bookmarks_callback) },
+  /* name, stock id, label */  { "Edit Toolbar", NULL, N_("_Toolbar"), 
+				  NULL, N_("Display a window that allows editing the toolbars"),
+				  G_CALLBACK (action_edit_toolbar_callback) },
   /* name, stock id, label */  { "Search", "gtk-find", N_("_Search for Files..."),
                                  "<control>F", N_("Locate documents and folders on this computer by name or content"),
                                  G_CALLBACK (action_search_callback) },
@@ -843,11 +1041,6 @@ static const GtkToggleActionEntry navigation_toggle_entries[] = {
   /* label, accelerator */   N_("_Side Pane"), "F9",
   /* tooltip */              N_("Change the visibility of this window's side pane"),
                              G_CALLBACK (action_show_hide_sidebar_callback),
-  /* is_active */            TRUE }, 
-  /* name, stock id */     { "Show Hide Location Bar", NULL,
-  /* label, accelerator */   N_("Location _Bar"), NULL,
-  /* tooltip */              N_("Change the visibility of this window's location bar"),
-                             G_CALLBACK (action_show_hide_location_bar_callback),
   /* is_active */            TRUE }, 
   /* name, stock id */     { "Show Hide Statusbar", NULL,
   /* label, accelerator */   N_("St_atusbar"), NULL,

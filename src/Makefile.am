@@ -16,6 +16,7 @@ libexec_PROGRAMS=				\
 INCLUDES =							\
 	-I$(top_srcdir) 					\
 	-I$(top_srcdir)/cut-n-paste-code			\
+	-I$(top_srcdir)/cut-n-paste-code/toolbar-editor		\
 	-I$(top_builddir)/libnautilus-private 			\
 	$(CORE_CFLAGS) 						\
 	$(EXIF_CFLAGS)						\
@@ -35,6 +36,7 @@ INCLUDES =							\
 LDADD =\
 	$(top_builddir)/src/file-manager/libnautilus-file-manager.la \
 	$(top_builddir)/libnautilus-private/libnautilus-private.la  \
+	$(top_builddir)/cut-n-paste-code/toolbar-editor/libtoolbareditor.la  \
 	$(CORE_LIBS) \
 	$(EXIF_LIBS) \
 	$(EXEMPI_LIBS) \
@@ -83,6 +85,14 @@ nautilus_SOURCES = \
 	nautilus-location-entry.h               \
 	nautilus-main.c 			\
 	nautilus-main.h				\
+        nautilus-zoom-action.c                  \
+        nautilus-zoom-action.h                  \
+        nautilus-view-chooser-action.c          \
+        nautilus-view-chooser-action.h          \
+        nautilus-location-bar-action.c          \
+        nautilus-location-bar-action.h          \
+	nautilus-navigation-action.c		\
+	nautilus-navigation-action.h		\
 	nautilus-navigation-action.c		\
 	nautilus-navigation-action.h		\
 	nautilus-navigation-bar.c         	\
@@ -112,10 +122,14 @@ nautilus_SOURCES = \
 	nautilus-side-pane.h			\
 	nautilus-sidebar-title.c		\
 	nautilus-sidebar-title.h		\
+ 	nautilus-singleton-action.c		\
+ 	nautilus-singleton-action.h		\
 	nautilus-spatial-window.c               \
 	nautilus-spatial-window.h               \
 	nautilus-throbber.c			\
 	nautilus-throbber.h			\
+ 	nautilus-toolbars-model.c               \
+ 	nautilus-toolbars-model.h               \
 	nautilus-trash-bar.c			\
 	nautilus-trash-bar.h			\
 	nautilus-window-bookmarks.c		\

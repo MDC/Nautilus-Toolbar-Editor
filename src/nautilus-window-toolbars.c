@@ -34,6 +34,12 @@
 #include "nautilus-window-private.h"
 #include "nautilus-window.h"
 #include "nautilus-throbber.h"
+#include "nautilus-pathbar.h"
+#include "nautilus-zoom-action.h"
+#include "nautilus-view-chooser-action.h"
+#include "nautilus-location-bar-action.h"
+#include <cut-n-paste-code/toolbar-editor/egg-editable-toolbar.h>
+#include <nautilus-toolbars-model.h>
 #include <eel/eel-gnome-extensions.h>
 #include <eel/eel-gtk-extensions.h>
 #include <eel/eel-string.h>
@@ -93,9 +99,10 @@ toolbar_reconfigured_cb (GtkToolItem *item,
 	nautilus_throbber_set_size (throbber, size);
 }
 
-void
+static void
 nautilus_navigation_window_activate_throbber (NautilusNavigationWindow *window)
 {
+ 	GtkToolbar *fixed_toolbar;
 	GtkToolItem *item;
 	GtkWidget *throbber;
 
@@ -103,12 +110,15 @@ nautilus_navigation_window_activate_throbber (NautilusNavigationWindow *window)
 		return;
 	}
 
+ 	fixed_toolbar = GTK_TOOLBAR (gtk_toolbar_new ());
+
+	/* Add expander */
 	item = gtk_tool_item_new ();
 	gtk_widget_show (GTK_WIDGET (item));
 	gtk_tool_item_set_expand (item, TRUE);
-	gtk_toolbar_insert (GTK_TOOLBAR (window->details->toolbar),
-			    item, -1);
+ 	gtk_toolbar_insert (fixed_toolbar, item, -1);
 
+	/* Create throbber */
 	throbber = nautilus_throbber_new ();
 	gtk_widget_show (GTK_WIDGET (throbber));
 
@@ -119,18 +129,88 @@ nautilus_navigation_window_activate_throbber (NautilusNavigationWindow *window)
 	g_signal_connect (item, "toolbar-reconfigured",
 			  G_CALLBACK (toolbar_reconfigured_cb), throbber);
 
-	gtk_toolbar_insert (GTK_TOOLBAR (window->details->toolbar),
-			    item, -1);
+ 	gtk_toolbar_insert (fixed_toolbar, item, -1);
+
+ 	egg_editable_toolbar_set_fixed (EGG_EDITABLE_TOOLBAR (window->details->toolbar),
+ 					fixed_toolbar);
 
 	window->details->throbber = throbber;
+}
+
+/* XXXMARCUS FIXME: Actually this function only adds the custom action to the action group so it might 
+be good to change the name */
+static void
+nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *window)
+{
+	GtkToolItem *item;
+	GtkWidget *hbox, *view_as_menu_vbox;
+	GtkAction *action;
+
+	/* Location action */
+	action = g_object_new (NAUTILUS_TYPE_LOCATION_BAR_ACTION,
+			       "name", "Location",
+			       "label", _("_Location"),
+			       "stock_id", GTK_STOCK_EDIT,
+			       "tooltip", _("Location"), //XXXMARCUS FIXME
+			       "window", window,
+			       "visible-overflown", FALSE,
+			       "is_important", TRUE, //XXXMARCUS ??
+			       NULL);
+
+	gtk_action_group_add_action (window->details->navigation_action_group, 
+				     action);
+
+	g_object_unref (action); ///XXMARCUS Should this be here?
+
+	/* Zoom action */
+	action = g_object_new (NAUTILUS_TYPE_ZOOM_ACTION,
+			       "name", "Zoom",
+			       "label", _("_Zoom"),
+			       "stock_id", GTK_STOCK_ZOOM_IN,
+			       "tooltip", _("Zoooom"), //XXXMARCUS FIXME
+			       "window", window,
+			       "is_important", FALSE, //XXXMARCUS ??
+			       NULL);
+
+	gtk_action_group_add_action (
+		window->details->navigation_action_group, action);
+
+	g_object_unref (action);
+
+	/* View Chooser action */
+	action = g_object_new (NAUTILUS_TYPE_VIEW_CHOOSER_ACTION,
+			       "name", "ViewChooser",
+			       "label", _("_View Chooser"),
+			       "stock_id", GTK_STOCK_FIND,
+			       "tooltip", _("Viewchooser"), //XXXMARCUS FIXME
+			       "window", window,
+			       "is_important", FALSE, //XXXMARCUS ??
+			       NULL);
+
+	gtk_action_group_add_action (
+		window->details->navigation_action_group, action);
 }
 
 void
 nautilus_navigation_window_initialize_toolbars (NautilusNavigationWindow *window)
 {
-	nautilus_navigation_window_activate_throbber (window);
-}
+	const char *ui;
 
+ 	window->details->toolbars_model = nautilus_toolbars_model_new ();
+ 
+	/* Creates the toolbar and specifiying the popup menu /editor from file editor.xml */ 
+	window->details->toolbar = egg_editable_toolbar_new_with_model (
+ 		nautilus_window_get_ui_manager (NAUTILUS_WINDOW (window)),
+ 		window->details->toolbars_model, "/editor");
+
+	ui = nautilus_ui_string_get ("editor.xml");
+	gtk_ui_manager_add_ui_from_string (nautilus_window_get_ui_manager (NAUTILUS_WINDOW (window)), ui, -1, NULL);
+
+	nautilus_navigation_window_activate_throbber (window);
+	nautilus_navigation_window_initialize_navigation_bar (window);
+
+ 	nautilus_toolbars_model_load (NAUTILUS_TOOLBARS_MODEL (window->details->toolbars_model));
+}
 
 static GList *
 get_extension_toolbar_items (NautilusNavigationWindow *window)

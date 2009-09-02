@@ -32,7 +32,7 @@
 #include "nautilus-window-slot.h"
 #include "nautilus-spatial-window.h"
 #include "nautilus-navigation-window.h"
-
+#include <cut-n-paste-code/toolbar-editor/egg-editable-toolbar.h>
 #include <libnautilus-private/nautilus-directory.h>
 
 /* FIXME bugzilla.gnome.org 42575: Migrate more fields into here. */
@@ -110,7 +110,9 @@ struct _NautilusNavigationWindowDetails {
 
         /* Toolbar */
         GtkWidget *toolbar;
-        GtkWidget *location_bar;
+        int location_bar;
+        GtkWidget *location_bar_widget;
+ 	EggToolbarsModel *toolbars_model;
 
         guint extensions_toolbar_merge_id;
         GtkActionGroup *extensions_toolbar_action_group;
@@ -238,7 +240,6 @@ void               nautilus_navigation_window_remove_go_menu_callback    (Nautil
 void               nautilus_navigation_window_remove_go_menu_items       (NautilusNavigationWindow    *window);
 
 /* Navigation window toolbar */
-void               nautilus_navigation_window_activate_throbber                     (NautilusNavigationWindow    *window);
 void               nautilus_navigation_window_initialize_toolbars                   (NautilusNavigationWindow    *window);
 void               nautilus_navigation_window_load_extension_toolbar_items          (NautilusNavigationWindow    *window);
 void               nautilus_navigation_window_set_throbber_active                   (NautilusNavigationWindow    *window, 
