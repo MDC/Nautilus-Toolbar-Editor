@@ -55,6 +55,8 @@ GType		  nautilus_toolbars_model_get_type	(void);
 EggToolbarsModel *nautilus_toolbars_model_new	(void);
 
 void		  nautilus_toolbars_model_load	(NautilusToolbarsModel *model);
+void		  nautilus_toolbars_model_load_default (NautilusToolbarsModel *model);
+void		  nautilus_toolbars_model_set_style (NautilusToolbarsModel *model, const char *style);
 
 G_END_DECLS
 
