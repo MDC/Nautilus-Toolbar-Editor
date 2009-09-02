@@ -142,8 +142,6 @@ be good to change the name */
 static void
 nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *window)
 {
-	GtkToolItem *item;
-	GtkWidget *hbox, *view_as_menu_vbox;
 	GtkAction *action;
 
 	/* Location action */
