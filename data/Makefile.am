@@ -23,6 +23,7 @@ nautilusdatadir = $(datadir)/nautilus
 
 nautilusdata_DATA = \
 	browser.xml 			\
+	toolbars.xml 			\
 	nautilus-extras.placeholder 	\
 	nautilus-suggested.placeholder 	\
 	$(NULL)

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<toolbars version="1.0">
+<available>
+	<toolitem name="Back"/>
+	<toolitem name="Forward"/>
+	<toolitem name="Up"/>
+	<toolitem name="Stop"/>
+	<toolitem name="Reload"/>
+	<toolitem name="Home"/>
+	<toolitem name="Go to Computer"/>
+	<toolitem name="Location"/>
+	<toolitem name="Zoom"/>
+	<toolitem name="ViewChooser"/>
+	<toolitem name="New Tab"/>
+	<toolitem name="Search"/>
+	<toolitem name="Add Bookmark"/>
+	<toolitem name="Copy"/>
+	<toolitem name="Paste"/>
+	<toolitem name="New Folder"/>
+</available>
+<toolbar name="DefaultToolbar">
+	<toolitem name="Back"/>
+	<toolitem name="Forward"/>
+	<toolitem name="Up"/>
+	<toolitem name="Stop"/>
+	<toolitem name="Reload"/>
+	<separator/>
+	<toolitem name="Home"/>	
+	<toolitem name="Go to Computer"/>
+</toolbar>
+<toolbar name="EntryToolbar">
+	<toolitem name="Location"/>
+	<toolitem name="Zoom"/>
+	<toolitem name="ViewChooser"/>
+</toolbar>
+</toolbars>
