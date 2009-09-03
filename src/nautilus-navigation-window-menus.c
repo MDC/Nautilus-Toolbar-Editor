@@ -363,7 +363,7 @@ action_edit_toolbar_callback (GtkAction *action,
         gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
         gtk_window_set_default_size (GTK_WINDOW (dialog), 500, 400);
 	gtk_dialog_add_button (GTK_DIALOG (dialog),
-			       GTK_STOCK_REVERT_TO_SAVED, GTK_RESPONSE_REJECT); //XXXMARCUS FIXME: better response code
+			       GTK_STOCK_REVERT_TO_SAVED, GTK_RESPONSE_REJECT);
 
 	gtk_dialog_add_button (GTK_DIALOG (dialog),
 			       _("_Add a New Toolbar"), RESPONSE_ADD_TOOLBAR);
@@ -375,7 +375,7 @@ action_edit_toolbar_callback (GtkAction *action,
 		nautilus_window_get_ui_manager (NAUTILUS_WINDOW (window)),
 		window->details->toolbars_model);
 	gtk_widget_show (editor);
-	//--------------------- FIXME: Cleanup; COPIED FROM EPHIPHANY -----------------------------
+	//--------------------- XXXMARCUS FIXME: Cleanup; COPIED FROM EPHIPHANY -----------------------------
 
 	GtkWidget *hbox, *label, *combo;
 	GtkListStore *store;

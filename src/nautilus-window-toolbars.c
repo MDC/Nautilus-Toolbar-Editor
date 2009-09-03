@@ -137,8 +137,8 @@ nautilus_navigation_window_activate_throbber (NautilusNavigationWindow *window)
 	window->details->throbber = throbber;
 }
 
-/* XXXMARCUS FIXME: Actually this function only adds the custom action to the action group so it might 
-be good to change the name */
+/* XXXMARCUS FIXME: Actually this function only adds the custom action to
+ * the action group so it might be good to change the name */
 static void
 nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *window)
 {
@@ -149,44 +149,43 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 			       "name", "Location",
 			       "label", _("_Location"),
 			       "stock_id", GTK_STOCK_EDIT,
-			       "tooltip", _("Location"), //XXXMARCUS FIXME
 			       "window", window,
 			       "visible-overflown", FALSE,
-			       "is_important", TRUE, //XXXMARCUS ??
+			       "is_important", TRUE,
 			       NULL);
 
 	gtk_action_group_add_action (window->details->navigation_action_group, 
 				     action);
 
-	g_object_unref (action); ///XXMARCUS Should this be here?
+	g_object_unref (action); ///XXMARCUS is this right?
 
 	/* Zoom action */
 	action = g_object_new (NAUTILUS_TYPE_ZOOM_ACTION,
 			       "name", "Zoom",
 			       "label", _("_Zoom"),
 			       "stock_id", GTK_STOCK_ZOOM_IN,
-			       "tooltip", _("Zoooom"), //XXXMARCUS FIXME
 			       "window", window,
-			       "is_important", FALSE, //XXXMARCUS ??
+			       "is_important", FALSE,
 			       NULL);
 
 	gtk_action_group_add_action (
 		window->details->navigation_action_group, action);
 
-	g_object_unref (action);
+	g_object_unref (action); ///XXMARCUS is this right?
 
 	/* View Chooser action */
 	action = g_object_new (NAUTILUS_TYPE_VIEW_CHOOSER_ACTION,
 			       "name", "ViewChooser",
 			       "label", _("_View Chooser"),
 			       "stock_id", GTK_STOCK_FIND,
-			       "tooltip", _("Viewchooser"), //XXXMARCUS FIXME
 			       "window", window,
-			       "is_important", FALSE, //XXXMARCUS ??
+			       "is_important", FALSE,
 			       NULL);
 
 	gtk_action_group_add_action (
 		window->details->navigation_action_group, action);
+
+	g_object_unref (action); ///XXMARCUS is this right?
 }
 
 void

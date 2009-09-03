@@ -24,7 +24,8 @@
  *  Based on nautilus-navigation-action.h
  *
  *  Authors: Alexander Larsson <alexl@redhat.com>
- *           Marco Pesenti Gritti //XXXMARCUS TODO
+ *           Marco Pesenti Gritti
+ *           Marcus Carlson <marcus@mejlamej.nu>
  *
  */
 

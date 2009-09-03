@@ -23,7 +23,8 @@
  *  Based on ephy-navigation-action.h from Epiphany
  *
  *  Authors: Alexander Larsson <alexl@redhat.com>
- *           Marco Pesenti Gritti //XXXMARCUS TODO
+ *           Marco Pesenti Gritti
+ *           Marcus Carlson <marcus@mejlamej.nu>
  *
  */
 

@@ -1769,7 +1769,7 @@ nautilus_navigation_window_set_bar_mode (NautilusNavigationWindow *window,
 	} else {
 		if (window->details->location_bar != -1) {
 			egg_toolbars_model_remove_toolbar (window->details->toolbars_model, window->details->location_bar);
-			window->details->location_bar = -1; //XXXMARCUS FIXME: -1
+			window->details->location_bar = -1;
 		}
 	}
 
