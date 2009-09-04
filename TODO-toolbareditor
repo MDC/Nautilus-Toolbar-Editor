@@ -1,5 +1,11 @@
-clean up
-location behaves strange when moving and in "Location:" mode
-update the toolbar in the other windows when editing
-search for XXXMARCUS
+ * clean up
+ * location behaves strange when moving and in "Location:" mode
+ * update the toolbar in the other windows when editing
+ * Hitting escape while dragging a "singleton action" or dragging it to a
+	draggable area (such as a file) removes the component from toolbar AND the
+	dialog. UPDATE: Problem seems to be that the widget is disconnected
+	once outside of the toolbar and when cancelling the drag the action /
+	toolbar item is returned to the toolbar but the connect function is not run
+ * search for XXXMARCUS
+
 
