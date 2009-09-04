@@ -35,9 +35,7 @@
 #include "nautilus-window.h"
 #include "nautilus-throbber.h"
 #include "nautilus-pathbar.h"
-#include "nautilus-zoom-action.h"
-#include "nautilus-view-chooser-action.h"
-#include "nautilus-location-bar-action.h"
+#include "nautilus-singleton-action.h"
 #include <cut-n-paste-code/toolbar-editor/egg-editable-toolbar.h>
 #include <nautilus-toolbars-model.h>
 #include <eel/eel-gnome-extensions.h>
@@ -145,14 +143,13 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 	GtkAction *action;
 
 	/* Location action */
-	action = g_object_new (NAUTILUS_TYPE_LOCATION_BAR_ACTION,
-			       "name", "Location",
-			       "label", _("_Location"),
-			       "stock_id", GTK_STOCK_EDIT,
-			       "window", window,
-			       "visible-overflown", FALSE,
-			       "is_important", TRUE,
-			       NULL);
+	action = nautilus_singleton_action_new ("Location", /* name */
+                               _("_Location"), /* label */
+                               GTK_STOCK_EDIT, /* stock */
+                               TRUE, /* important */
+                               FALSE, /* visible overflown */
+			       TRUE, /* expand */
+                               window->details->location_bar_widget /* widget */);
 
 	gtk_action_group_add_action (window->details->navigation_action_group, 
 				     action);
@@ -160,13 +157,13 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 	g_object_unref (action); ///XXMARCUS is this right?
 
 	/* Zoom action */
-	action = g_object_new (NAUTILUS_TYPE_ZOOM_ACTION,
-			       "name", "Zoom",
-			       "label", _("_Zoom"),
-			       "stock_id", GTK_STOCK_ZOOM_IN,
-			       "window", window,
-			       "is_important", FALSE,
-			       NULL);
+	action = nautilus_singleton_action_new ("Zoom", /* name */
+                               _("_Zoom"), /* label */
+                               GTK_STOCK_ZOOM_IN, /* stock */
+                               FALSE, /* important */
+                               TRUE, /* visible overflown */
+			       FALSE, /* expand */
+                               window->zoom_control /* widget */);
 
 	gtk_action_group_add_action (
 		window->details->navigation_action_group, action);
@@ -174,13 +171,13 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 	g_object_unref (action); ///XXMARCUS is this right?
 
 	/* View Chooser action */
-	action = g_object_new (NAUTILUS_TYPE_VIEW_CHOOSER_ACTION,
-			       "name", "ViewChooser",
-			       "label", _("_View Chooser"),
-			       "stock_id", GTK_STOCK_FIND,
-			       "window", window,
-			       "is_important", FALSE,
-			       NULL);
+	action = nautilus_singleton_action_new ("ViewChooser", /* name */
+                               _("_View Chooser"), /* label */
+                               GTK_STOCK_FIND, /* stock */
+                               FALSE, /* important */
+                               TRUE, /* visible overflown */
+			       FALSE, /* expand */
+                               window->view_as_combo_box /* widget */);
 
 	gtk_action_group_add_action (
 		window->details->navigation_action_group, action);

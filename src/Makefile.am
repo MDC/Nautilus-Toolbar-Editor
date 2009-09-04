@@ -85,14 +85,10 @@ nautilus_SOURCES = \
 	nautilus-location-entry.h               \
 	nautilus-main.c 			\
 	nautilus-main.h				\
-        nautilus-zoom-action.c                  \
-        nautilus-zoom-action.h                  \
-        nautilus-view-chooser-action.c          \
-        nautilus-view-chooser-action.h          \
-        nautilus-location-bar-action.c          \
-        nautilus-location-bar-action.h          \
 	nautilus-navigation-action.c		\
 	nautilus-navigation-action.h		\
+	nautilus-singleton-action.c		\
+	nautilus-singleton-action.h		\
 	nautilus-navigation-bar.c         	\
 	nautilus-navigation-bar.h		\
 	nautilus-navigation-window-menus.c      \

@@ -32,7 +32,6 @@
 #include "nautilus-window-private.h"
 #include "nautilus-actions.h"
 #include "nautilus-application.h"
-#include "nautilus-location-bar-action.h"
 #include "nautilus-bookmarks-window.h"
 #include "nautilus-main.h"
 #include "nautilus-location-bar.h"
