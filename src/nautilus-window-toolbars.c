@@ -154,7 +154,7 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 	gtk_action_group_add_action (window->details->navigation_action_group, 
 				     action);
 
-	g_object_unref (action); ///XXMARCUS is this right?
+	g_object_unref (action); ///XXXMARCUS is this right?
 
 	/* Zoom action */
 	action = nautilus_singleton_action_new ("Zoom", /* name */
@@ -168,7 +168,7 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 	gtk_action_group_add_action (
 		window->details->navigation_action_group, action);
 
-	g_object_unref (action); ///XXMARCUS is this right?
+	g_object_unref (action); ///XXXMARCUS is this right?
 
 	/* View Chooser action */
 	action = nautilus_singleton_action_new ("ViewChooser", /* name */
@@ -182,7 +182,7 @@ nautilus_navigation_window_initialize_navigation_bar (NautilusNavigationWindow *
 	gtk_action_group_add_action (
 		window->details->navigation_action_group, action);
 
-	g_object_unref (action); ///XXMARCUS is this right?
+	g_object_unref (action); ///XXXMARCUS is this right?
 }
 
 void
