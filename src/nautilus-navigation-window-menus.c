@@ -340,13 +340,21 @@ combo_changed_cb (GtkComboBox *combo,
 	g_type_class_unref (flags_class);
 }
 
-
 static void
 action_edit_toolbar_callback (GtkAction *action, 
 			      NautilusNavigationWindow *window)
 {
 	GtkWidget *dialog;
 	GtkWidget *editor;
+	GtkWidget *hbox, *label, *combo;
+	GtkListStore *store;
+	GtkTreeIter iter;
+	GtkCellRenderer *renderer;
+	GFlagsClass *flags_class;
+	const GFlagsValue *value;
+	EggTbModelFlags flags = 0;
+	int i;
+	char *pref;
 
 	/* Show the toolbar (and save the setting) */
 	if (!nautilus_navigation_window_toolbar_showing (window)) {
@@ -357,6 +365,7 @@ action_edit_toolbar_callback (GtkAction *action,
                                               GTK_WINDOW (window),
                                               GTK_DIALOG_DESTROY_WITH_PARENT,
                                               NULL);
+	gtk_window_set_icon_name (GTK_WINDOW (dialog), "system-file-manager");
         gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_CLOSE);
         gtk_container_set_border_width (GTK_CONTAINER (GTK_DIALOG (dialog)), 5);
         gtk_box_set_spacing (GTK_BOX (GTK_DIALOG (dialog)->vbox), 2);
@@ -375,17 +384,6 @@ action_edit_toolbar_callback (GtkAction *action,
 		nautilus_window_get_ui_manager (NAUTILUS_WINDOW (window)),
 		window->details->toolbars_model);
 	gtk_widget_show (editor);
-	//--------------------- XXXMARCUS FIXME: Cleanup; COPIED FROM EPHIPHANY -----------------------------
-
-	GtkWidget *hbox, *label, *combo;
-	GtkListStore *store;
-	GtkTreeIter iter;
-	GtkCellRenderer *renderer;
-	GFlagsClass *flags_class;
-	const GFlagsValue *value;
-	EggTbModelFlags flags = 0;
-	int i;
-	char *pref;
 
 	hbox = gtk_hbox_new (FALSE, 12);
 	gtk_box_set_spacing (GTK_BOX (editor), 18);
@@ -450,8 +448,6 @@ action_edit_toolbar_callback (GtkAction *action,
 	g_signal_connect (combo, "changed",
 			G_CALLBACK (combo_changed_cb), window);
 
-
-	//--------------------------------------------------------------------------
 	/* FIXME error handling */
         gtk_container_add (GTK_CONTAINER (GTK_DIALOG (dialog)->vbox), editor);
 
@@ -462,11 +458,8 @@ action_edit_toolbar_callback (GtkAction *action,
                           G_CALLBACK (ev_window_cmd_edit_toolbar_callback),
 			  window);
 
-	gtk_window_set_icon_name (GTK_WINDOW (dialog), "system-file-manager");
-
         gtk_widget_show_all (dialog);
 }
-
 
 void
 nautilus_navigation_window_remove_go_menu_callback (NautilusNavigationWindow *window)

@@ -462,7 +462,7 @@ configure_item_cursor (GtkToolItem *item,
             {
               pixbuf = new_separator_pixbuf ();
             }
-          else //XXXMARCUS TODO expander
+          else /* also works for expander */
             {
               char *icon_name = NULL;
               char *stock_id = NULL;
